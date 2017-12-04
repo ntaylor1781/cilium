@@ -26,22 +26,23 @@ CHECK_FORMAT=./bazel-out/local-fastbuild/bin/check_format.py.runfiles/envoy/tool
 
 BAZEL ?= bazel
 BAZEL_OPTS = --batch
-BAZEL_BUILD_OPTS = --spawn_strategy=standalone --genrule_strategy=standalone -c fastbuild
+BAZEL_BUILD_OPTS = -c fastbuild
 CLANG ?= clang
 CLANG_FORMAT ?= clang-format
 BUILDIFIER ?= buildifier
 STRIP ?= strip
 
-PROTOC ?= protoc
+PROTOC ?= bazel-envoy/external/envoy_deps/thirdparty_build/bin/protoc
 PROTO_PATH = bazel-envoy/external/envoy_api
 GO_OUT = ../pkg/envoy
 
-API_PROTOS := api/*.proto
+API_PROTOS := api/rds.proto api/lds.proto api/address.proto api/auth.proto api/base.proto api/discovery.proto api/sds.proto api/bootstrap.proto api/cds.proto api/health_check.proto api/protocol.proto
+
 API_GOS = $(API_PROTOS:.proto=.pb.go)
 API_SOURCES := $(addprefix $(PROTO_PATH)/,$(API_PROTOS))
 API_TARGETS := $(addprefix $(GO_OUT)/,$(API_GOS))
 
-FILTER_PROTOS := api/filter/http_connection_manager.proto
+FILTER_PROTOS := api/filter/network/http_connection_manager.proto
 FILTER_GOS = $(FILTER_PROTOS:.proto=.pb.go)
 FILTER_SOURCES := $(addprefix $(PROTO_PATH)/,$(FILTER_PROTOS))
 FILTER_TARGETS := $(addprefix $(GO_OUT)/,$(FILTER_GOS))
@@ -72,7 +73,7 @@ $(CHECK_FORMAT):
 	$(BAZEL) $(BAZEL_OPTS) build $(BAZEL_BUILD_OPTS) //:check_format.py
 
 $(API_TARGETS): $(API_SOURCES)
-	protoc --proto_path=$(PROTO_PATH) -I bazel-envoy/external/envoy_deps/thirdparty/protobuf/src -I bazel-envoy/external/googleapis --go_out=plugins=grpc:$(GO_OUT) $(API_SOURCES)
+	protoc --proto_path=$(PROTO_PATH) -I bazel-envoy/external/envoy_deps/thirdparty/protobuf/src -I bazel-envoy/external/googleapis -I bazel-envoy/external/com_lyft_protoc_gen_validate --go_out=plugins=grpc:$(GO_OUT) $(API_SOURCES)
 
 $(CILIUM_TARGETS): $(CILIUM_SOURCES)
 	protoc --proto_path=$(CILIUM_PROTO_PATH) -I bazel-envoy/external/envoy_deps/thirdparty/protobuf/src --go_out=plugins=grpc:$(GO_OUT) $(CILIUM_SOURCES)
@@ -80,7 +81,7 @@ $(CILIUM_TARGETS): $(CILIUM_SOURCES)
 $(API_SOURCES): $(PROTO_PATH)
 
 $(FILTER_TARGETS): $(FILTER_SOURCES)
-	protoc --proto_path=$(PROTO_PATH) -I bazel-envoy/external/envoy_deps/thirdparty/protobuf/src -I bazel-envoy/external/googleapis --go_out=plugins=grpc:$(GO_OUT) $(FILTER_SOURCES)
+	protoc --proto_path=$(PROTO_PATH) -I bazel-envoy/external/envoy_deps/thirdparty/protobuf/src -I bazel-envoy/external/googleapis -I bazel-envoy/external/com_lyft_protoc_gen_validate --go_out=plugins=grpc:$(GO_OUT) $(FILTER_SOURCES)
 
 install: force
 	$(INSTALL) -m 0755 -d $(DESTDIR)$(BINDIR)

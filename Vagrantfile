@@ -31,6 +31,10 @@ chown -R vagrant:vagrant $GOPATH
 curl -SsL https://github.com/cilium/bpf-map/releases/download/v1.0/bpf-map -o bpf-map
 chmod +x bpf-map
 mv bpf-map /usr/bin
+echo "deb [arch=amd64] http://storage.googleapis.com/bazel-apt stable jdk1.8" | tee /etc/apt/sources.list.d/bazel.list
+curl https://bazel.build/bazel-release.pub.gpg | apt-key add -
+apt-get update
+apt-get install -y bazel=0.8.0
 SCRIPT
 
 $envoyexport = ENV['CILIUM_USE_ENVOY'] ? "export CILIUM_USE_ENVOY=1\n" : ""

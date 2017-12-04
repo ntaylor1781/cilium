@@ -103,8 +103,6 @@ func StartEnvoy(debug bool, adminPort int, stateDir, logDir string, baseID uint6
 			name := "cilium-envoy"
 			logLevel := "info"
 			if debug {
-				// Try first with debug build
-				name = "cilium-envoy-debug"
 				logLevel = "debug"
 			}
 			e.cmd = exec.Command(name, "-l", logLevel, "-c", configPath, "-b", bootstrapPath, "--base-id", strconv.FormatUint(baseID, 10))
@@ -113,12 +111,6 @@ func StartEnvoy(debug bool, adminPort int, stateDir, logDir string, baseID uint6
 
 			err = e.cmd.Start()
 			if err != nil {
-				if debug {
-					// try again without debug
-					log.WithError(err).Warn("Envoy: failed to start debug build of Envoy, trying again with the normal build.")
-					debug = false
-					continue
-				}
 				log.WithError(err).Warn("Envoy: failed to start.")
 				started <- false
 				return
@@ -136,8 +128,8 @@ func StartEnvoy(debug bool, adminPort int, stateDir, logDir string, baseID uint6
 				logFile.Close()
 				logFile = nil
 			}
-			// start again after a short wait. If Cilium exits this should be enough time to not
-			// start Envoy again in that case.
+			// start again after a short wait. If Cilium exits this should be enough
+			// time to not start Envoy again in that case.
 			log.WithError(err).Info("Envoy: Sleeping for 100ms before respawning.")
 			time.Sleep(100 * time.Millisecond)
 		}

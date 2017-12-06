@@ -33,12 +33,12 @@ metadata:
   labels:
     id: app2
 spec:
-      containers:
-      - name: app-frontend
-        image: cilium/demo-client
-        command: [ "sleep" ]
-        args:
-          - "1000h"
+  containers:
+    - name: app-frontend
+      image: cilium/demo-client
+      command: [ "sleep" ]
+      args:
+        - "1000h"
 ---
 apiVersion: v1 
 kind: Pod
@@ -47,9 +47,9 @@ metadata:
   labels:
     id: app3
 spec:
-      containers:
-      - name: app-frontend
-        image: cilium/demo-client
-        command: [ "sleep" ]
-        args:
-          - "1000h"
+  containers:
+    - name: app-frontend
+      image: cilium/demo-client
+      command: [ "sleep" ]
+      args:
+        - "1000h"

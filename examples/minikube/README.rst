@@ -7,11 +7,13 @@ care of all deployments steps.
 
 Deploy a minikube cluster as described bellow to instruct Kubernetes to use the
 CNI plugin infrastructure plus the ``localkube`` bootstrapper since it contains
-``etcd`` >= ``3.1.0`` required by Cilium.:
+``etcd`` >= ``3.1.0`` required by Cilium. The ``CustomResourceValidation`` will
+allow Cilium to install the Cilium Network Policy validator into kubernetes
+(`more info <https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/#validation>`_).
 
 ::
 
-	$ minikube start --network-plugin=cni --bootstrapper=localkube
+	$ minikube start --network-plugin=cni --bootstrapper=localkube --feature-gates=CustomResourceValidation=true
         [...]
 	$ kubectl create -f cilium-ds.yaml
 

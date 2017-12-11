@@ -11,11 +11,13 @@ Step 0: Install kubectl & minikube
 
 Then, boot a minikube cluster with the Container Network Interface (CNI)
 network plugin enabled plus the ``localkube`` bootstrapper since it contains
-``etcd`` >= ``3.1.0`` required by cilium.
+``etcd`` >= ``3.1.0`` required by Cilium. The ``CustomResourceValidation`` will
+allow Cilium to install the Cilium Network Policy validator into kubernetes
+(`more info <https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/#validation>`_).
 
 ::
 
-    $ minikube start --network-plugin=cni --bootstrapper=localkube
+    $ minikube start --network-plugin=cni --bootstrapper=localkube --feature-gates=CustomResourceValidation=true
 
 After minikube has finished  setting up your new Kubernetes cluster, you can
 check the status of the cluster by running ``kubectl get cs``:

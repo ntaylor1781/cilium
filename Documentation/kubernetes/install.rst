@@ -16,6 +16,80 @@ the :ref:`k8scompatibility` section for kubernetes API version compatibility.
 
 .. _admin_mount_bpffs:
 
+Running Kubernetes with CRD Validation (Recommended)
+====================================================
+
+Custom Resource Validation was introduced in Kubernetes since version ``1.8.0``.
+This is still considered an alpha feature in Kubernetes ``1.8.0`` but since
+``v1.0.0-rc3``, Cilium creates, or updates in case it exists, the Cilium Network
+Policy Resource Definition with the validation schema embedded. This allows the
+validation of CNP to be made on the kube-apiserver for the most common user
+errors.
+
+To enable this feature the flag ``--feature-gates=CustomResourceValidation=true``
+must be set when starting kube-apiserver. As for Cilium, it's already included
+by default since ``v1.0.0-rc3`` so no further actions are necessary.
+
+By running ``kubectl get crd ciliumnetworkpolicies.cilium.io -o json`` it is
+possible to find out if CNP resource definition contains the validation schema.
+
+.. code:: bash
+
+	kubectl get crd ciliumnetworkpolicies.cilium.io -o json | grep -A 12 openAPIV3Schema
+            "openAPIV3Schema": {
+                "oneOf": [
+                    {
+                        "required": [
+                            "spec"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "specs"
+                        ]
+                    }
+                ],
+
+In case the user writes a policy that is not in conformity with the schema it
+will get an error such as:
+
+.. code:: bash
+
+	cat <<EOF>./bad-cnp.yaml
+	apiVersion: "cilium.io/v2"
+	kind: CiliumNetworkPolicy
+	description: "Policy to test multiple rules in a single file"
+	metadata:
+	  name: my-new-cilium-object
+	spec:
+	  endpointSelector:
+	    matchLabels:
+	      app: details
+	      track: stable
+	      version: v1
+	  ingress:
+	  - fromEndpoints:
+	    - matchLabels:
+	        app: reviews
+	        track: stable
+	        version: v1
+	    toPorts:
+	    - ports:
+	      - port: '65536'
+	        protocol: TCP
+	      rules:
+	        http:
+	        - method: GET
+	          path: "/health"
+	EOF
+
+	kubectl create -f ./bad-cnp.yaml
+	...
+	spec.ingress.toPorts.ports.port in body should match '^(6553[0-5]|655[0-2][0-9]|65[0-4][0-9]{2}|6[0-4][0-9]{3}|[1-5][0-9]{4}|[0-9]{1,4})$'
+
+
+On this case, the policy have a port out of the uint16 range (0-65535).
+
 Mounting the BPF FS (Optional)
 ==============================
 
@@ -74,8 +148,8 @@ This string must be reflected in the unit filename.
         EOF
 
 
-CNI Configuation
-================
+CNI Configuration
+=================
 
 `CNI` - Container Network Interface is the plugin layer used by Kubernetes to
 delegate networking configuration. You can find additional information on the

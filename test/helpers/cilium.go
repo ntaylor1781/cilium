@@ -80,7 +80,7 @@ func (s *SSHMeta) EndpointGet(id string) *models.Endpoint {
 	res := s.ExecCilium(endpointGetCmd)
 	err := res.Unmarshal(&data)
 	if err != nil {
-		s.logger.WithError(err).Errorf("EndpointGet fail %d", id)
+		s.logger.WithError(err).Errorf("EndpointGet fail %s", id)
 		return nil
 	}
 	if len(data) > 0 {
@@ -306,7 +306,8 @@ func (s *SSHMeta) PolicyEndpointsSummary() (map[string]int, error) {
 	status := strings.Split(endpoints.String(), " ")
 	for _, kind := range status {
 		switch kind {
-		case OptionIngress, OptionEgress:
+		case models.EndpointPolicyEnabledBoth, models.EndpointPolicyEnabledEgress,
+			models.EndpointPolicyEnabledIngress:
 			result[Enabled]++
 		case OptionNone:
 			result[Disabled]++
